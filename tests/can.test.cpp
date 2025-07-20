@@ -1,4 +1,4 @@
-// Copyright 2024 Khalil Estell
+// Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -475,8 +475,8 @@ boost::ut::suite<"can_identifier_filter"> can_identifier_filter_test = []() {
     constexpr auto expected_id1 = 0x45;
     constexpr auto expected_id2 = 0x90;
     constexpr hal::test_can_range_filter::pair expected_pair{
-      expected_id1,
-      expected_id2,
+      .id_1 = expected_id1,
+      .id_2 = expected_id2,
     };
     test_can_range_filter test;
 

@@ -1,4 +1,4 @@
-# Copyright 2024 Khalil Estell
+# Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,6 +53,9 @@ libhal_unit_test(SOURCES
   tests/experimental/usb.test.cpp
   tests/zero_copy_serial.test.cpp
   tests/buffered_can.test.cpp
+  tests/pointers.test.cpp
+  tests/circular_buffer.test.cpp
+  tests/allocated_buffer.test.cpp
   tests/main.test.cpp
 
   PACKAGES

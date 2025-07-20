@@ -1,4 +1,4 @@
-// Copyright 2024 Khalil Estell
+// Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,3 +126,6 @@ private:
   virtual void driver_on_trigger(hal::callback<handler> p_callback) = 0;
 };
 }  // namespace hal
+
+namespace hal::v5 {
+}  // namespace hal::v5

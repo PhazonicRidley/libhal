@@ -1,4 +1,4 @@
-// Copyright 2024 Khalil Estell
+// Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
 
 #pragma once
 
-#include <cstdint>
-
 #include <system_error>
 #include <type_traits>
+
+#include "units.hpp"
 
 /**
  * @defgroup Error Error
@@ -80,10 +80,10 @@ private:
 
   void const* m_instance = nullptr;
   std::errc m_error_code{};
-  std::uint32_t m_reserved0{};
-  std::uint32_t m_reserved1{};
-  std::uint32_t m_reserved2{};
-  std::uint32_t m_reserved3{};
+  u32 m_reserved0{};
+  u32 m_reserved1{};
+  u32 m_reserved2{};
+  u32 m_reserved3{};
 };
 
 /**
@@ -175,13 +175,13 @@ private:
   std::errc m_error_code{};
   /// Reserved memory for future use without breaking the ABI
   /// To keep the layout the same with `exception_abi_origin_v0`, these MUST
-  /// stay std::uint32_t into the future. Their names can be changed, and their
-  /// contents can be any format, but they must stay std::uint32_t for the
+  /// stay u32 into the future. Their names can be changed, and their
+  /// contents can be any format, but they must stay u32 for the
   /// static_assert check.
-  std::uint32_t m_reserved0{};
-  std::uint32_t m_reserved1{};
-  std::uint32_t m_reserved2{};
-  std::uint32_t m_reserved3{};
+  u32 m_reserved0{};
+  u32 m_reserved1{};
+  u32 m_reserved2{};
+  u32 m_reserved3{};
 };
 
 static_assert(sizeof(exception_abi_origin_v0) == sizeof(exception));
@@ -265,13 +265,13 @@ struct no_such_device : public exception
    * @param p_instance - must point to the instance of the driver that threw
    * this exception.
    */
-  constexpr no_such_device(std::uint32_t p_address, void const* p_instance)
+  constexpr no_such_device(u32 p_address, void const* p_instance)
     : exception(std::errc::no_such_device, p_instance)
     , address(p_address)
   {
   }
 
-  std::uint32_t address;
+  u32 address;
 };
 
 /**
@@ -310,27 +310,16 @@ struct io_error : public exception
 
 /**
  * @ingroup Error
- * @brief Raised when a resource is unavailable but another attempt would work
- *
- * Resources are typically busses, peripherals, and shared hardware devices.
- *
- * # How do to recover from this?
- *
- * ## 1. Retry!
- *
- * Consider I2C. I2C has the ability to have multiple controllers on the bus. If
- * two controllers attempt to control the bus at the same time, arbitration will
- * occur. One of the I2C controllers will succeed and the other will get a
- * hal::resource_unavailable_try_again exception. To handle this, simply attempt
- * the transaction again until a timeout occurs (time or retry based).
- *
- * ## 2. Else?
- *
- * This exception should only be raised for arbitration reasons and not I/O
- * reasons, so the only option is to retry. The time it takes for a retry to
- * work depends strongly on the applications and the drivers use.  If this does
- * not work for the application, then a change in architecture, drivers, or part
- * selection may be required.
+ * @brief Raised when a resource is unavailable but another attempt may work
+ * @deprecated I2c no longer uses this exception when another controller on the
+ * bus is currently performing a transaction. The new behavior is to wait for
+ * the bus to become available. `hal::io_waiter` can be used to get out of the
+ * i2c if a deadline has been exceeded. There are no other interfaces for which
+ * this exception makes sense and thus an example describing when to use this
+ * and how to recover from it does not exist. Until such an example is found,
+ * this error type should not be thrown and should be considered deprecated. If
+ * such a use case becomes known, then this comment will be updated, deprecation
+ * notice will be removed, and this type can be used in those situations.
  *
  */
 struct resource_unavailable_try_again : public exception
@@ -343,6 +332,43 @@ struct resource_unavailable_try_again : public exception
    */
   resource_unavailable_try_again(void const* p_instance)
     : exception(std::errc::resource_unavailable_try_again, p_instance)
+  {
+  }
+};
+
+/**
+ * @ingroup Error
+ * @brief Raised when a hardware resource is in use and cannot be acquired.
+ *
+ * # When to Raise this
+ *
+ * This exception should be raised when application code attempts to construct
+ * or acquire a hardware resource that is already in use by another driver
+ * object.
+ *
+ * # How to recover from this?
+ *
+ * ## 1. Use an alternative resource
+ *
+ * If an alternative resource exists that the application an take advantage of,
+ * then the application can catch this exception and attempt to acquire the
+ * alternative resource.
+ *
+ * For example, consider `hal::can_identifier_filter` and
+ * `hal::can_mask_filter`. One could use a mask filter in place of an identifier
+ * filter. If an attempt to acquire an identifier filter fails, then the code
+ * could fallback to acquiring a mask filter.
+ *
+ * ## 2. Otherwise, this is a runtime bug
+ *
+ * If none of the above apply to your application, then this exception is
+ * considered a bug in the application. The application should handle this error
+ * as it would any other bugs in the application.
+ */
+struct device_or_resource_busy : public exception
+{
+  device_or_resource_busy(void const* p_instance)
+    : exception(std::errc::device_or_resource_busy, p_instance)
   {
   }
 };
@@ -512,13 +538,13 @@ struct argument_out_of_domain : public exception
  */
 struct message_size : public exception
 {
-  message_size(std::uint32_t p_max_size, void const* p_instance)
+  message_size(u32 p_max_size, void const* p_instance)
     : exception(std::errc::message_size, p_instance)
     , max_size(p_max_size)
   {
   }
 
-  std::uint32_t max_size;
+  u32 max_size;
 };
 
 /**
@@ -575,6 +601,59 @@ struct unknown : public exception
 {
   unknown(void const* p_instance)
     : exception(std::errc{}, p_instance)
+  {
+  }
+};
+
+/**
+ * @ingroup Error
+ * @brief Raised when a weak_ptr is accessed for an object that has been
+ * destroyed.
+ *
+ */
+class bad_weak_ptr : public hal::exception
+{
+public:
+  bad_weak_ptr(void* p_weak_ptr_instance)
+    : hal::exception(std::errc::bad_address, p_weak_ptr_instance)
+  {
+  }
+};
+
+/**
+ * @ingroup Error
+ * @brief Raised when an API attempts to access elements outside of a container
+ * or resource.
+ *
+ */
+struct out_of_range : public exception
+{
+  struct info
+  {
+    usize m_index;
+    usize m_capacity;
+  };
+
+  out_of_range(void const* p_instance, info p_info)
+    : exception(std::errc::invalid_argument, p_instance)
+    , m_info(p_info)
+  {
+  }
+
+  info m_info;
+};
+
+/**
+ * @ingroup Error
+ * @brief Raised when an API attempts to access the contents of an empty
+ * optional_ptr.
+ *
+ */
+struct bad_optional_ptr_access : public exception
+{
+
+  bad_optional_ptr_access(void const* p_instance)
+    : exception(std::errc::invalid_argument, p_instance)
   {
   }
 };

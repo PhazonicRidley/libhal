@@ -1,3 +1,4 @@
 CompileFlags:
   CompilationDatabase: .
-  Add: [-std=c++23]
+  BuiltinHeaders: QueryDriver
+

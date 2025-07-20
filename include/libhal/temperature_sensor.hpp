@@ -1,4 +1,4 @@
-// Copyright 2024 Khalil Estell
+// Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,3 +41,28 @@ private:
   virtual celsius driver_read() = 0;
 };
 }  // namespace hal
+
+namespace hal::v5 {
+/**
+ * @brief Interface for acquiring temperature samples from a device.
+ *
+ */
+class temperature_sensor
+{
+public:
+  /**
+   * @brief Read the current temperature measured by the device
+   *
+   * @return celsius - Measured temperature
+   */
+  [[nodiscard]] celsius read()
+  {
+    return driver_read();
+  }
+
+  virtual ~temperature_sensor() = default;
+
+private:
+  virtual celsius driver_read() = 0;
+};
+}  // namespace hal::v5

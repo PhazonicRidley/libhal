@@ -1,4 +1,4 @@
-// Copyright 2024 Khalil Estell
+// Copyright 2024 - 2025 Khalil Estell and the libhal contributors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ public:
       throw std::runtime_error("p_data is too big for this test API! Must be "
                                "smaller than m_working_buffer");
     }
-    std::copy(p_data.begin(), p_data.end(), m_working_buffer.begin());
+    std::ranges::copy(p_data, m_working_buffer.begin());
     m_cursor = p_data.size();
   }
 
