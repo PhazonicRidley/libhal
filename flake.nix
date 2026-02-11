@@ -42,7 +42,7 @@
               python313
               cmake
               ninja
-              llvmPackages_20.clang-tools
+              llvmPackages_21.clang-tools
               stm32loader
 
             ]
