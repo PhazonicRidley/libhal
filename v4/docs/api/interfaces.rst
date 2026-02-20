@@ -7,7 +7,7 @@ the APIs.
 
 .. toctree::
     :caption: Interfaces
-    :maxdepth: 2
+    :maxdepth: 3
 
     accelerometer
     adc
@@ -15,22 +15,25 @@ the APIs.
     can
     dac
     distance_sensor
-    error
-    functional
     gyroscope
     i2c
     input_pin
     interrupt_pin
+    io_waiter
+    lock
     magnetometer
     motor
     output_pin
+    pointers
     pwm
     rotation_sensor
     serial
     servo
     spi
     steady_clock
+    stream_dac
     temperature_sensor
+    timed_interrupt
     timeout
     timer
-    units
+    usb
