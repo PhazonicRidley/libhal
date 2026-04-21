@@ -24,6 +24,7 @@
             pkgs.zlib
             pkgs.zstd
             pkgs-libxml2.libxml2
+            
           ];
 
           fhsBuildLibs = with pkgs; [
@@ -44,6 +45,8 @@
               ninja
               llvmPackages_21.clang-tools
               stm32loader
+              stdenv.cc.cc.lib
+              pkg-config
 
             ]
             ++ buildBaseLibs;
@@ -62,7 +65,7 @@
                 '';
               }).env;
 
-            "llvm" = pkgs.mkShell.override { stdenv = pkgs.llvmPackages_20.stdenv; } {
+            "llvm" = pkgs.mkShell.override { stdenv = pkgs.llvmPackages_20.libcxxStdenv; } {
               name = "libhal-native-llvm";
               buildInputs =
                 devshellBasePkgs
@@ -70,6 +73,7 @@
                   llvmPackages_20.libcxx
                   llvmPackages_20.libunwind
                 ]);
+              LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath [pkgs.llvmPackages_20.libcxx];
               shellHook = ''
                 conan config install https://github.com/libhal/conan-config2.git
                 conan hal setup
